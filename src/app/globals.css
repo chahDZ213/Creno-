@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --creno-primaire: #1d4e89;
+  --creno-primaire-fonce: #143a67;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: #f2f5f8;
+  color: #10151b;
+  font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  font-size: 17px;
+}
+
+/* Zones tactiles : rien en dessous de 48 px sur les commandes. */
+@layer components {
+  .bouton {
+    @apply inline-flex min-h-tactile items-center justify-center gap-2
+      rounded-md px-5 py-3 text-[1.0625rem] font-semibold
+      transition-colors disabled:opacity-40;
+  }
+  .bouton-principal {
+    @apply bouton bg-atelier text-white hover:bg-atelier-fonce;
+  }
+  .bouton-second {
+    @apply bouton border-2 border-ardoise-800 bg-white text-ardoise-950
+      hover:bg-ardoise-100;
+  }
+  .bouton-sobre {
+    @apply bouton border border-ardoise-200 bg-white text-ardoise-800
+      hover:bg-ardoise-50;
+  }
+  .champ {
+    @apply min-h-tactile w-full rounded-md border-2 border-ardoise-200 bg-white
+      px-4 py-3 text-[1.0625rem] text-ardoise-950
+      placeholder:text-ardoise-400 focus:border-atelier focus:outline-none;
+  }
+  .etiquette {
+    @apply mb-1.5 block font-semibold text-ardoise-800;
+  }
+  .bloc {
+    @apply border border-ardoise-200 bg-white;
+  }
+}
+
+/* Le focus doit rester visible même les mains sales, en plein soleil. */
+:focus-visible {
+  outline: 3px solid var(--creno-primaire);
+  outline-offset: 2px;
+}
