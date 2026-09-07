@@ -151,6 +151,14 @@ et la RLS.
 Sans clés Resend ni Twilio, le déploiement fonctionne : les notifications
 partent dans les logs Vercel plutôt que chez le garagiste.
 
+**La tâche planifiée tourne une fois par jour, à 6 h UTC.** Le plan Hobby de
+Vercel n'autorise pas mieux, et une expression plus fréquente y fait échouer
+le déploiement. C'est tenable pour une démonstration, pas pour un vrai
+client : la relance « 12 h sans réponse » arrive alors avec un retard qui la
+vide de son sens, et le rappel J-1 part à heure fixe plutôt qu'à la bonne
+distance du rendez-vous. À repasser à `0 * * * *` sur un plan Pro, ou à
+confier à un déclencheur externe.
+
 ## Sécurité
 
 RLS sur les cinq tables. `garages` et `prestations` sont lisibles
