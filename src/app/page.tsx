@@ -15,7 +15,7 @@ export default function Accueil() {
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/app" className="bouton-principal">Accéder à mon atelier</Link>
-        <Link href="/garage-durand" className="bouton-second">
+        <Link href="/garage-ducret" className="bouton-second">
           Voir une page de garage
         </Link>
       </div>
