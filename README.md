@@ -130,6 +130,27 @@ contre-visite y figurent au même titre que la distribution. Dix demandes dans
 des statuts variés, dont quatre à traiter et une qui dort depuis plus de douze
 heures, pour que le dashboard montre son liseré d'urgence.
 
+## Mise en ligne
+
+Vercel, projet lié à ce dépôt, branche `main`, racine du dépôt (le code n'est
+plus dans un sous-dossier). Quatre variables à poser dans Settings →
+Environment Variables, sur les trois environnements :
+
+| Variable | Où la trouver |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | idem, clé `anon` — publique par nature |
+| `SUPABASE_SERVICE_ROLE_KEY` | idem, clé `service_role` — **accès total, jamais côté navigateur** |
+| `NEXT_PUBLIC_URL_BASE` | l'URL du déploiement, pour les liens des emails et SMS |
+
+La clé `service_role` sert à deux choses seulement, toutes deux côté serveur :
+lire l'occupation de l'atelier pour calculer les créneaux, et enregistrer une
+demande déposée par un visiteur sans compte. Le reste passe par la clé `anon`
+et la RLS.
+
+Sans clés Resend ni Twilio, le déploiement fonctionne : les notifications
+partent dans les logs Vercel plutôt que chez le garagiste.
+
 ## Sécurité
 
 RLS sur les cinq tables. `garages` et `prestations` sont lisibles
