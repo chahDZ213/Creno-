@@ -12,22 +12,24 @@ html {
 }
 
 body {
-  background: #f2f5f8;
+  background: #eef2f6;
   color: #10151b;
   font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
   font-size: 17px;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Zones tactiles : rien en dessous de 48 px sur les commandes. */
 @layer components {
+  /* ------------------------------------------------------------ commandes */
+  /* Rien en dessous de 48 px : ces boutons se pressent avec un gant. */
   .bouton {
     @apply inline-flex min-h-tactile items-center justify-center gap-2
-      rounded-md px-5 py-3 text-[1.0625rem] font-semibold
+      rounded-xl px-5 py-3 text-[1.0625rem] font-semibold
       transition-colors disabled:opacity-40;
   }
   .bouton-principal {
-    @apply bouton bg-atelier text-white hover:bg-atelier-fonce;
+    @apply bouton bg-atelier text-white shadow-sm hover:bg-atelier-fonce;
   }
   .bouton-second {
     @apply bouton border-2 border-ardoise-800 bg-white text-ardoise-950
@@ -37,20 +39,46 @@ body {
     @apply bouton border border-ardoise-200 bg-white text-ardoise-800
       hover:bg-ardoise-50;
   }
+  .bouton-danger {
+    @apply bouton border-2 border-refus bg-white text-refus hover:bg-refus/5;
+  }
+
+  /* --------------------------------------------------------------- saisie */
   .champ {
-    @apply min-h-tactile w-full rounded-md border-2 border-ardoise-200 bg-white
+    @apply min-h-tactile w-full rounded-xl border-2 border-ardoise-200 bg-white
       px-4 py-3 text-[1.0625rem] text-ardoise-950
       placeholder:text-ardoise-400 focus:border-atelier focus:outline-none;
   }
   .etiquette {
-    @apply mb-1.5 block font-semibold text-ardoise-800;
+    @apply mb-1.5 block text-[0.9375rem] font-semibold text-ardoise-600;
+  }
+
+  /* ------------------------------------------------------------- surfaces */
+  .carte {
+    @apply rounded-2xl border border-ardoise-200/80 bg-white
+      shadow-[0_1px_2px_rgba(16,21,27,0.04)];
   }
   .bloc {
-    @apply border border-ardoise-200 bg-white;
+    @apply carte;
+  }
+
+  /* --------------------------------------------------------------- badges */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-lg px-2 py-1
+      text-[0.8125rem] font-bold uppercase tracking-wide;
+  }
+  .badge-attente { @apply badge bg-alerte/20 text-[#6b4f00]; }
+  .badge-ok      { @apply badge bg-ok/10 text-ok; }
+  .badge-refus   { @apply badge bg-refus/10 text-refus; }
+  .badge-neutre  { @apply badge bg-ardoise-100 text-ardoise-600; }
+
+  /* Le titre d'écran, répété d'une page à l'autre. */
+  .titre-ecran {
+    @apply text-2xl font-bold tracking-tight text-ardoise-950;
   }
 }
 
-/* Le focus doit rester visible même les mains sales, en plein soleil. */
+/* Le focus doit rester visible les mains sales, en plein soleil. */
 :focus-visible {
   outline: 3px solid var(--creno-primaire);
   outline-offset: 2px;
