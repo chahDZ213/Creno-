@@ -20,7 +20,11 @@ const RESEND = process.env.RESEND_API_KEY;
 const SMTP_HOTE = process.env.SMTP_HOTE ?? 'smtp.gmail.com';
 const SMTP_PORT = Number(process.env.SMTP_PORT ?? 465);
 const SMTP_UTILISATEUR = process.env.SMTP_UTILISATEUR;
-const SMTP_MOTDEPASSE = process.env.SMTP_MOTDEPASSE;
+// Google présente ses mots de passe d'application en quatre groupes de
+// quatre lettres. Les espaces sont un artifice d'affichage : collés tels
+// quels, ils font échouer l'authentification sans rien dire de plus qu'un
+// « mot de passe refusé ». On les retire plutôt que de les faire chasser.
+const SMTP_MOTDEPASSE = process.env.SMTP_MOTDEPASSE?.replace(/\s+/g, '');
 const EXPEDITEUR = process.env.CRENO_EMAIL_EXPEDITEUR
   ?? (SMTP_UTILISATEUR ? `Créno <${SMTP_UTILISATEUR}>` : 'Créno <bonjour@creno.fr>');
 const TWILIO_SID = process.env.TWILIO_ACCOUNT_SID;
@@ -38,7 +42,7 @@ export async function envoyerEmail({ a, sujet, texte }: Email): Promise<void> {
         host: SMTP_HOTE,
         port: SMTP_PORT,
         secure: SMTP_PORT === 465,
-        auth: { user: SMTP_UTILISATEUR, pass: SMTP_MOTDEPASSE },
+        auth: { user: SMTP_UTILISATEUR.trim(), pass: SMTP_MOTDEPASSE },
       });
       const envoi = await transport.sendMail({
         from: EXPEDITEUR, to: a, subject: sujet, text: texte,
