@@ -142,14 +142,39 @@ Environment Variables, sur les trois environnements :
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | idem, clé `anon` — publique par nature |
 | `SUPABASE_SERVICE_ROLE_KEY` | idem, clé `service_role` — **accès total, jamais côté navigateur** |
 | `NEXT_PUBLIC_URL_BASE` | l'URL du déploiement, pour les liens des emails et SMS |
+| `SMTP_UTILISATEUR` / `SMTP_MOTDEPASSE` | l'adresse d'envoi et son mot de passe d'application |
 
 La clé `service_role` sert à deux choses seulement, toutes deux côté serveur :
 lire l'occupation de l'atelier pour calculer les créneaux, et enregistrer une
 demande déposée par un visiteur sans compte. Le reste passe par la clé `anon`
 et la RLS.
 
-Sans clés Resend ni Twilio, le déploiement fonctionne : les notifications
-partent dans les logs Vercel plutôt que chez le garagiste.
+### Par où partent les emails
+
+Trois transports, essayés dans cet ordre :
+
+**SMTP**, dès que `SMTP_UTILISATEUR` et `SMTP_MOTDEPASSE` sont posés. L'expéditeur
+est alors une vraie boîte — une adresse Gmail avec un mot de passe
+d'application, par exemple. C'est la voie la plus courte pour démarrer :
+aucun nom de domaine à posséder, et les messages arrivent partout, parce
+qu'ils partent d'une adresse que les serveurs de réception connaissent déjà.
+Gmail plafonne autour de 500 messages par jour, ce qui laisse de la marge.
+
+**Resend**, si aucune adresse SMTP n'est configurée. À préférer le jour où
+Créno a son domaine : meilleure délivrabilité à volume, pas de quota de
+messagerie, et un expéditeur qui porte le nom du produit plutôt qu'une
+adresse personnelle. Attention : sans domaine vérifié, Resend n'envoie qu'à
+l'adresse du titulaire du compte, et depuis un domaine partagé dont la
+réputation ne dépend pas de vous.
+
+**La console**, sans aucune clé. Le message écrit est mot pour mot celui qui
+partira en production.
+
+Un envoi qui échoue est enregistré dans les logs sans faire échouer la
+réponse du garage : le rendez-vous est déjà en base, c'est lui qui compte.
+
+Sans clés SMS, les SMS partent dans les logs Vercel plutôt que chez le
+garagiste.
 
 **La tâche planifiée tourne une fois par jour, à 6 h UTC.** Le plan Hobby de
 Vercel n'autorise pas mieux, et une expression plus fréquente y fait échouer

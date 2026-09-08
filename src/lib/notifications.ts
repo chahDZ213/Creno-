@@ -1,15 +1,28 @@
 /**
- * Envoi d'emails (Resend) et de SMS (Twilio).
+ * Envoi d'emails et de SMS.
  *
- * Sans clés, les deux transports écrivent en console : l'application
- * fonctionne de bout en bout en développement, et le message envoyé est
- * exactement celui qui partira en production.
+ * Trois transports pour l'email, essayés dans cet ordre :
+ *
+ *   1. SMTP (Gmail et compagnie) — l'expéditeur est une vraie boîte, donc
+ *      les messages arrivent partout sans posséder de nom de domaine.
+ *      C'est la voie la plus courte pour démarrer.
+ *   2. Resend — pour la suite, quand Créno aura son domaine : meilleure
+ *      délivrabilité à volume, et pas de quota journalier de messagerie.
+ *   3. La console — tant qu'aucune clé n'est fournie. L'application
+ *      fonctionne de bout en bout, et le message affiché est mot pour mot
+ *      celui qui partira en production.
  */
+import nodemailer from 'nodemailer';
 import { creneauLisible } from './format';
 import type { Creneau, Demande, Garage } from './types';
 
 const RESEND = process.env.RESEND_API_KEY;
-const EXPEDITEUR = process.env.CRENO_EMAIL_EXPEDITEUR ?? 'Créno <bonjour@creno.fr>';
+const SMTP_HOTE = process.env.SMTP_HOTE ?? 'smtp.gmail.com';
+const SMTP_PORT = Number(process.env.SMTP_PORT ?? 465);
+const SMTP_UTILISATEUR = process.env.SMTP_UTILISATEUR;
+const SMTP_MOTDEPASSE = process.env.SMTP_MOTDEPASSE;
+const EXPEDITEUR = process.env.CRENO_EMAIL_EXPEDITEUR
+  ?? (SMTP_UTILISATEUR ? `Créno <${SMTP_UTILISATEUR}>` : 'Créno <bonjour@creno.fr>');
 const TWILIO_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_FROM = process.env.TWILIO_NUMERO;
@@ -19,6 +32,23 @@ type Email = { a: string; sujet: string; texte: string };
 type Sms = { a: string; texte: string };
 
 export async function envoyerEmail({ a, sujet, texte }: Email): Promise<void> {
+  if (SMTP_UTILISATEUR && SMTP_MOTDEPASSE) {
+    try {
+      const transport = nodemailer.createTransport({
+        host: SMTP_HOTE,
+        port: SMTP_PORT,
+        secure: SMTP_PORT === 465,
+        auth: { user: SMTP_UTILISATEUR, pass: SMTP_MOTDEPASSE },
+      });
+      await transport.sendMail({ from: EXPEDITEUR, to: a, subject: sujet, text: texte });
+    } catch (e) {
+      // Un email perdu ne doit pas faire échouer la réponse du garage :
+      // le rendez-vous est déjà enregistré, c'est lui qui compte.
+      console.error('[email] échec SMTP', e instanceof Error ? e.message : e);
+    }
+    return;
+  }
+
   if (!RESEND) {
     console.info(`[email → ${a}] ${sujet}\n${texte}\n`);
     return;
