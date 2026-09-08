@@ -40,7 +40,12 @@ export async function envoyerEmail({ a, sujet, texte }: Email): Promise<void> {
         secure: SMTP_PORT === 465,
         auth: { user: SMTP_UTILISATEUR, pass: SMTP_MOTDEPASSE },
       });
-      await transport.sendMail({ from: EXPEDITEUR, to: a, subject: sujet, text: texte });
+      const envoi = await transport.sendMail({
+        from: EXPEDITEUR, to: a, subject: sujet, text: texte,
+      });
+      // Tracé même en cas de succès : sans lui, un email jamais parti et un
+      // email parti puis filtré par le destinataire se ressemblent trop.
+      console.info(`[email] remis à ${a} via ${SMTP_HOTE} (${envoi.messageId})`);
     } catch (e) {
       // Un email perdu ne doit pas faire échouer la réponse du garage :
       // le rendez-vous est déjà enregistré, c'est lui qui compte.
