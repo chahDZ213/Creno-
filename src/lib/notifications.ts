@@ -58,10 +58,22 @@ export async function envoyerEmail({ a, sujet, texte }: Email): Promise<void> {
     return;
   }
 
+  // Un repli silencieux est le pire des diagnostics : on dit ce qui manque.
+  if (SMTP_UTILISATEUR || SMTP_MOTDEPASSE) {
+    console.warn(
+      '[email] configuration SMTP incomplète, repli :'
+      + ` SMTP_UTILISATEUR ${SMTP_UTILISATEUR ? 'présent' : 'ABSENT'},`
+      + ` SMTP_MOTDEPASSE ${SMTP_MOTDEPASSE ? 'présent' : 'ABSENT'}`,
+    );
+  } else {
+    console.warn(`[email] aucune adresse SMTP configurée, repli sur ${RESEND ? 'Resend' : 'la console'}`);
+  }
+
   if (!RESEND) {
     console.info(`[email → ${a}] ${sujet}\n${texte}\n`);
     return;
   }
+  console.info(`[email] envoi via Resend à ${a}, expéditeur ${EXPEDITEUR}`);
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
