@@ -67,6 +67,8 @@ export type RendezVous = {
   fin: string;
   type: 'rdv' | 'blocage';
   libelle: string | null;
+  /** Date d'envoi du rappel de la veille au client. Null tant qu'il n'est pas parti. */
+  rappel_veille_at?: string | null;
 };
 
 export type Demande = {
