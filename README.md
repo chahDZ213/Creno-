@@ -92,7 +92,8 @@ nouvelle demande porte la plaque, le motif en cinq mots et le lien direct vers
 la fiche.
 
 Les deux tâches périodiques passent par `/api/taches/rappels`, appelée toutes
-les heures par un cron Vercel et protégée par `CRENO_CLE_CRON`.
+les heures et protégée par `CRENO_CLE_CRON`. Voir « Mise en ligne » pour le
+déclencheur.
 
 ## Ce dépôt est provisoire
 
@@ -176,13 +177,29 @@ réponse du garage : le rendez-vous est déjà en base, c'est lui qui compte.
 Sans clés SMS, les SMS partent dans les logs Vercel plutôt que chez le
 garagiste.
 
-**La tâche planifiée tourne une fois par jour, à 6 h UTC.** Le plan Hobby de
-Vercel n'autorise pas mieux, et une expression plus fréquente y fait échouer
-le déploiement. C'est tenable pour une démonstration, pas pour un vrai
-client : la relance « 12 h sans réponse » arrive alors avec un retard qui la
-vide de son sens, et le rappel J-1 part à heure fixe plutôt qu'à la bonne
-distance du rendez-vous. À repasser à `0 * * * *` sur un plan Pro, ou à
-confier à un déclencheur externe.
+**La tâche planifiée tourne toutes les heures**, déclenchée par le workflow
+GitHub Actions `.github/workflows/rappels.yml`. Le plan Hobby de Vercel
+n'autorise qu'un passage par jour et une expression plus fréquente y fait
+échouer le déploiement : son cron reste donc en place, à 6 h UTC, mais
+seulement comme filet. Deux secrets à poser dans le dépôt, sous
+Settings → Secrets and variables → Actions :
+
+| Secret | Valeur |
+|---|---|
+| `CRENO_CLE_CRON` | la même que la variable Vercel du même nom |
+| `CRENO_URL_BASE` | `https://creno.montappli.com` |
+
+Un passage quotidien ne suffisait pas, et pas seulement par retard. Le rappel
+de la veille cherchait les rendez-vous commençant dans 23 à 25 heures : avec
+un seul passage à 6 h UTC, seuls ceux du petit matin tombaient dans cette
+fenêtre, et **presque aucun client n'était rappelé**. La fenêtre servait en
+même temps de garde-fou contre le double envoi, si bien qu'un passage horaire
+aurait envoyé deux SMS au même client.
+
+L'unicité repose désormais sur `rendez_vous.rappel_veille_at`, posé après
+l'envoi. La fréquence des passages n'a plus d'effet sur le nombre de
+messages : un rappel part une fois, un passage manqué est rattrapé au
+suivant, et les deux déclencheurs peuvent se chevaucher sans dommage.
 
 ## Sécurité
 

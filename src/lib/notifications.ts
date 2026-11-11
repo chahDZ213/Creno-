@@ -30,7 +30,36 @@ const EXPEDITEUR = process.env.CRENO_EMAIL_EXPEDITEUR
 const TWILIO_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_FROM = process.env.TWILIO_NUMERO;
-const BASE = process.env.NEXT_PUBLIC_URL_BASE ?? 'http://localhost:3000';
+/**
+ * Adresse publique de Créno, celle qui apparaît dans les liens des e-mails et
+ * des SMS — donc celle que voit le client du garage.
+ *
+ * Elle est dans le dépôt parce que ce n'est pas un secret et qu'un lien de
+ * suivi envoyé à un client ne doit pas dépendre d'un champ qu'on peut laisser
+ * vide : `??` ne rattrape que null et undefined, et une variable vide
+ * fabriquait des liens vers `http://localhost:3000`.
+ */
+const SITE_EN_PRODUCTION = 'https://creno.montappli.com';
+
+const BASE =
+  urlExploitable(process.env.NEXT_PUBLIC_URL_BASE) ??
+  (process.env.VERCEL_ENV === 'production' ? SITE_EN_PRODUCTION : null) ??
+  urlExploitable(process.env.VERCEL_URL) ??
+  'http://localhost:3000';
+
+/** Normalise une URL de configuration, ou null si elle est inutilisable. */
+function urlExploitable(valeur: string | undefined): string | null {
+  const brut = valeur?.trim();
+  if (!brut) return null;
+  // Les variables Vercel sont des noms d'hôte nus.
+  const candidat = /^https?:\/\//i.test(brut) ? brut : `https://${brut}`;
+  try {
+    new URL(candidat);
+  } catch {
+    return null;
+  }
+  return candidat.replace(/\/+$/, '');
+}
 
 type Email = { a: string; sujet: string; texte: string };
 type Sms = { a: string; texte: string };

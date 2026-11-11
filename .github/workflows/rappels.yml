@@ -1,0 +1,44 @@
+# Passage horaire de la tâche de rappels.
+#
+# Pourquoi ici et pas dans vercel.json : le plan Hobby de Vercel n'autorise
+# qu'un passage par jour, et c'est trop peu. Le rappel de la veille et la
+# relance « 12 h sans réponse » sont deux des promesses du produit ; à un
+# passage quotidien, la relance arrive avec jusqu'à 24 h de retard.
+#
+# Le cron Vercel reste en place comme filet : si ce workflow est suspendu
+# (GitHub désactive les planifications d'un dépôt resté 60 jours sans
+# activité), le passage quotidien continue de rattraper les rappels en
+# attente, puisque l'unicité vient de `rappel_veille_at` et non du rythme.
+#
+# À poser dans Settings → Secrets and variables → Actions :
+#   CRENO_CLE_CRON  — la même valeur que la variable Vercel du même nom
+#   CRENO_URL_BASE  — https://creno.montappli.com
+name: Rappels Créno
+
+on:
+  schedule:
+    # Toutes les heures. GitHub peut décaler de quelques minutes aux heures
+    # chargées : sans importance ici, rien ne dépend de la minute exacte.
+    - cron: '0 * * * *'
+  workflow_dispatch: # pour déclencher un passage à la main depuis l'onglet Actions
+
+jobs:
+  rappels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Appeler la tâche de rappels
+        env:
+          CLE: ${{ secrets.CRENO_CLE_CRON }}
+          BASE: ${{ secrets.CRENO_URL_BASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE:-}" ] || [ -z "${CLE:-}" ]; then
+            echo "::error::CRENO_URL_BASE ou CRENO_CLE_CRON manquant dans les secrets du dépôt."
+            exit 1
+          fi
+          # --fail-with-body : on veut le corps de la réponse même sur une
+          # erreur, c'est lui qui dit ce qui a échoué.
+          reponse=$(curl --silent --show-error --fail-with-body --max-time 60 \
+            --header "Authorization: Bearer ${CLE}" \
+            "${BASE%/}/api/taches/rappels")
+          echo "Réponse : ${reponse}"
