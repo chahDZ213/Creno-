@@ -209,3 +209,52 @@ jamais : le client y accède par `token_suivi` exact, via une fonction
 `SECURITY DEFINER` qui n'autorise aucune énumération. L'équipe ne voit que les
 lignes de son `garage_id`. Les créneaux libres sont calculés côté serveur :
 l'API publique ne renvoie jamais les rendez-vous existants.
+
+## L'installation d'un garage
+
+Un garage qui se connecte pour la première fois ne voit pas un tableau de bord
+vide : il est envoyé sur `/installation`, neuf questions, une par écran.
+
+| Question | Ce qu'elle règle |
+|---|---|
+| Nom du garage | `nom`, et le `slug` de la page publique, déduit du nom |
+| Où vous trouve-t-on | `adresse`, `telephone`, `email` — le téléphone décide si les SMS partent |
+| Quand êtes-vous ouvert | `horaires`, jour par jour, avec pause déjeuner |
+| Combien de voitures en même temps | `nb_postes` |
+| À partir de quand peut-on réserver | `delai_min_heures` |
+| Jusqu'à quand | `horizon_jours` |
+| Qu'est-ce que vous faites | le catalogue, coché dans `PRESTATIONS_DEFAUT`, durées corrigées, ajouts libres |
+| Affichez-vous vos prix | `affiche_prix`, les prix par prestation, `taux_horaire_ttc` |
+| À quoi ressemble votre page | `couleur_primaire`, `gabarit` |
+
+Tout est enregistré **en une seule fois**, à la dernière question. Un garage à
+demi configuré est pire que pas configuré du tout : sa page publique serait en
+ligne avec des horaires mais sans prestations, et un client pourrait y déposer
+une demande que personne ne verrait.
+
+Le marqueur de « déjà installé » est l'existence d'horaires, pas une colonne
+dédiée : `horaires = '{}'` ne peut venir que d'un garage qui n'a jamais répondu,
+puisqu'un garage fermé tous les jours écrit `{"lundi":null,…}`. Les deux
+situations restent distinctes, et il n'y a pas de migration à appliquer.
+
+Rien n'est figé : tout se retouche ensuite dans Réglages, qui reste la seule
+page d'édition. Le parcours ne sert qu'une fois.
+
+### Remettre une démonstration à zéro
+
+```sql
+delete from rendez_vous;
+delete from demandes;
+delete from prestations;
+update garages set
+  slug = 'mon-garage', nom = 'Mon garage',
+  adresse = null, telephone = null, email = null, logo_url = null,
+  couleur_primaire = '#1D4E89', gabarit = 'etapes',
+  horaires = '{}'::jsonb, fermetures = '[]'::jsonb,
+  nb_postes = 1, delai_min_heures = 24, horizon_jours = 21,
+  taux_horaire_ttc = null, affiche_prix = false;
+```
+
+La ligne `garages` est conservée, et avec elle son `id` : c'est lui que
+`profils` référence, donc le compte reste connecté. Les horaires repassent à
+`{}`, et la prochaine connexion rouvre le questionnaire.

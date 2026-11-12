@@ -20,7 +20,9 @@ export async function middleware(requete: NextRequest) {
   });
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user && requete.nextUrl.pathname.startsWith('/app')) {
+  const prive = requete.nextUrl.pathname.startsWith('/app')
+    || requete.nextUrl.pathname.startsWith('/installation');
+  if (!user && prive) {
     const url = requete.nextUrl.clone();
     url.pathname = '/connexion';
     url.searchParams.set('suite', requete.nextUrl.pathname);
@@ -30,5 +32,5 @@ export async function middleware(requete: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/app/:path*', '/connexion'],
+  matcher: ['/app/:path*', '/installation', '/connexion'],
 };

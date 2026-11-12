@@ -9,6 +9,12 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Créno pose une barre fixe en bas de l'écran — les onglets dans /app, les
+     boutons Retour / Continuer pendant l'installation. Quand le navigateur
+     amène un champ à l'écran tout seul (ouverture du clavier, tabulation, lien
+     d'ancrage), il le cale au ras du bord bas : juste sous cette barre, donc
+     invisible et intouchable. Cette réserve lui dit de s'arrêter plus haut. */
+  scroll-padding-bottom: 7rem;
 }
 
 body {
