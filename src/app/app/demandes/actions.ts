@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { instant } from '@/lib/disponibilites';
 import {
-  notifierAlternative, notifierConfirmation, notifierRefus,
+  notifierAlternative, notifierConfirmation, notifierRefus, notifierVoiturePrete,
 } from '@/lib/notifications';
 import { monGarage } from '@/lib/serveur/session';
 import { serveur } from '@/lib/supabase/server';
@@ -84,5 +84,32 @@ export async function refuser(formData: FormData) {
 
   await notifierRefus(garage, demande, motif || null);
   revalidatePath('/app');
+  redirect('/app');
+}
+
+/**
+ * La voiture est prête : le client est prévenu, la demande est close.
+ *
+ * Il manquait toute la fin du parcours. Le garage confirmait un rendez-vous,
+ * prenait la voiture, la réparait — et le client n'apprenait jamais qu'elle
+ * était finie autrement qu'en téléphonant. Le statut `terminee` existait en
+ * base et dans l'affichage, mais rien ne le posait jamais.
+ */
+export async function terminer(formData: FormData) {
+  const id = String(formData.get('id'));
+  const { garage, db, demande } = await chargerDemande(id);
+
+  /* Garde-fou : seule une demande confirmée peut être déclarée prête. Sans
+     cela, un double envoi du formulaire enverrait deux fois le SMS — et un
+     client qui reçoit deux fois « votre voiture est prête » se demande
+     laquelle des deux est la bonne. */
+  if (demande.statut !== 'confirmee') return;
+
+  await db.from('demandes')
+    .update({ statut: 'terminee' }).eq('id', demande.id);
+  await notifierVoiturePrete(garage, demande);
+
+  revalidatePath('/app');
+  revalidatePath(`/app/demandes/${demande.id}`);
   redirect('/app');
 }

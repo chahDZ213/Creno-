@@ -84,7 +84,16 @@ forts, focus visible en plein soleil.
 | Autre créneau proposé | Client | Email + SMS |
 | Demande refusée | Client | Email |
 | Rappel J-1 | Client | SMS |
+| **Véhicule prêt** | **Client** | **SMS + email** |
 | Sans réponse depuis 12 h | Garage | SMS |
+
+Le message « véhicule prêt » ferme le parcours. Il manquait : le garage
+prenait la voiture, la réparait, et le client n'apprenait jamais qu'elle était
+finie autrement qu'en téléphonant. Le statut `terminee` existait en base et
+dans l'affichage, mais rien ne le posait. Le bouton vit sur la fiche d'une
+demande confirmée, demande confirmation avant d'envoyer — un SMS parti ne se
+reprend pas — et refuse d'agir sur une demande qui n'est pas confirmée, pour
+qu'un double envoi du formulaire ne prévienne pas le client deux fois.
 
 Sans clés Resend ni Twilio, les deux transports écrivent en console : le
 message affiché est exactement celui qui partira en production. Le SMS de
