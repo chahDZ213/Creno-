@@ -255,6 +255,47 @@ export async function notifierRefus(
   });
 }
 
+/**
+ * La voiture est prête.
+ *
+ * C'était le trou du parcours : le garage prenait la voiture et le client
+ * n'apprenait jamais qu'elle était finie autrement qu'en appelant. Dans un
+ * modèle où le créneau n'est qu'une dépose, c'est le message qui compte le
+ * plus — celui qui fait revenir le client chercher son véhicule.
+ *
+ * SMS d'abord : le client est au travail, il ne lit pas ses e-mails. L'e-mail
+ * suit pour la trace, avec l'adresse et le téléphone de l'atelier.
+ */
+export async function notifierVoiturePrete(
+  garage: Garage, demande: Demande,
+): Promise<void> {
+  const taches: Promise<void>[] = [];
+  if (demande.client_tel) {
+    taches.push(envoyerSms({
+      a: demande.client_tel,
+      texte: `${garage.nom} : votre ${demande.vehicule_immat} est prête.`
+        + (garage.telephone ? ` ${garage.telephone}` : ''),
+    }));
+  }
+  if (demande.client_email) {
+    taches.push(envoyerEmail({
+      a: demande.client_email,
+      sujet: `Votre véhicule est prêt — ${garage.nom}`,
+      texte: [
+        `Bonjour ${demande.client_nom},`,
+        '',
+        `Votre ${demande.vehicule_immat} est prête, vous pouvez venir la récupérer.`,
+        garage.adresse ? `  ${garage.adresse}` : '',
+        garage.telephone ? `  ${garage.telephone}` : '',
+        '',
+        `Suivi : ${lienSuivi(demande.token_suivi)}`,
+        `Référence ${demande.reference}`,
+      ].filter(Boolean).join('\n'),
+    }));
+  }
+  await Promise.all(taches);
+}
+
 export async function rappelVeille(
   garage: Garage, demande: Demande, creneau: Creneau,
 ): Promise<void> {

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ActionsDemande from '@/components/ActionsDemande';
+import VoiturePrete from '@/components/VoiturePrete';
 import PastilleStatut from '@/components/Statut';
 import { creneauLisible, depuis, duree as formatDuree } from '@/lib/format';
 import { monGarage } from '@/lib/serveur/session';
@@ -31,6 +32,8 @@ export default async function Fiche(
     || DUREE_DEPOT_MINUTES;
 
   const enAttente = demande.statut === 'nouvelle';
+  // Rendez-vous accepté : il reste un geste, dire que la voiture est prête.
+  const enAtelier = demande.statut === 'confirmee';
 
   return (
     <div className="space-y-4">
@@ -126,6 +129,8 @@ export default async function Fiche(
       {enAttente ? (
         <ActionsDemande id={demande.id}
           creneaux={demande.creneaux_souhaites} dureeEstimee={minutes} />
+      ) : enAtelier ? (
+        <VoiturePrete id={demande.id} immat={demande.vehicule_immat} />
       ) : (
         <div className="carte p-5">
           <p className="font-semibold text-ardoise-950">

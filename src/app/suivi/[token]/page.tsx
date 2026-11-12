@@ -23,7 +23,9 @@ const MESSAGE: Record<Statut, string> = {
   alternative_proposee: 'Le garage vous propose un autre créneau.',
   refusee: 'Le garage ne peut pas donner suite.',
   annulee: 'Cette demande est annulée.',
-  terminee: 'Le passage à l’atelier est terminé.',
+  // « Terminée » est le mot du garage ; le client, lui, attend de savoir
+  // qu'il peut venir chercher sa voiture.
+  terminee: 'Votre véhicule est prêt, vous pouvez venir le récupérer.',
 };
 
 export default async function Suivi(
