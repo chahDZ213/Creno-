@@ -9,8 +9,12 @@ import type { Creneau } from '@/lib/types';
 type Action = 'confirmer' | 'proposer' | 'refuser' | null;
 
 export default function ActionsDemande({
-  id, creneaux, dureeEstimee,
-}: { id: string; creneaux: Creneau[]; dureeEstimee: number }) {
+  id, creneaux, dureeEstimee, restitutionProposee,
+}: {
+  id: string; creneaux: Creneau[]; dureeEstimee: number;
+  /** Date calculée côté serveur, que le garage peut corriger avant d'annoncer. */
+  restitutionProposee: string;
+}) {
   const [action, setAction] = useState<Action>(null);
   const [retenu, setRetenu] = useState(creneaux[0]?.debut ?? '');
 
@@ -57,6 +61,21 @@ export default function ActionsDemande({
           ))}
         </ul>
         <ChampDuree defaut={dureeEstimee} />
+
+        <label className="block">
+          <span className="mb-1 block font-semibold text-ardoise-950">
+            Voiture rendue le
+          </span>
+          <input type="date" name="restitution_prevue"
+            defaultValue={restitutionProposee}
+            className="min-h-tactile w-full border-2 border-ardoise-200 px-3" />
+          <span className="mt-1 block text-[0.9375rem] text-ardoise-600">
+            Calculé d’après la durée et vos horaires. Corrigez si une pièce
+            doit arriver. Le client reçoit cette date, présentée comme une
+            estimation.
+          </span>
+        </label>
+
         <button className="bouton-principal w-full">Confirmer le rendez-vous</button>
         {retour}
       </form>

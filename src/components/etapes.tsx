@@ -214,11 +214,11 @@ export function ChoixCreneaux({
   return (
     <section aria-labelledby="t-creneaux">
       <h2 id="t-creneaux" className="text-2xl font-bold text-ardoise-950">
-        Quand pouvez-vous passer ?
+        Quand déposez-vous la voiture ?
       </h2>
       <p className="mt-1 text-ardoise-600">
-        Choisissez jusqu’à trois créneaux, du plus arrangeant au moins.
-        Le garage en retiendra un.
+        Choisissez jusqu’à trois moments, du plus arrangeant au moins. Le
+        garage en retiendra un et vous dira quand la voiture sera prête.
       </p>
 
       {brouillon.creneaux.length > 0 && (
@@ -245,8 +245,12 @@ export function ChoixCreneaux({
 
       {!chargement && jours.length === 0 && (
         <p className="mt-5 rounded-md bg-ardoise-100 p-4 text-ardoise-800">
-          Aucun créneau libre sur les prochaines semaines.
-          {garage.telephone && <> Appelez le garage au <strong>{garage.telephone}</strong>.</>}
+          {/* « Aucun créneau libre » laissait croire à un planning plein. La
+              cause est presque toujours ailleurs : l'atelier a atteint ce
+              qu'il accepte par jour sur toute la période consultable. Le dire
+              évite au client de croire à une panne du site. */}
+          L’atelier est complet jusqu’à la fin de la période réservable.
+          {garage.telephone && <> Appelez le garage au <strong>{garage.telephone}</strong> : il reste souvent une solution.</>}
         </p>
       )}
 

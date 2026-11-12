@@ -13,7 +13,7 @@
  *      celui qui partira en production.
  */
 import nodemailer from 'nodemailer';
-import { creneauLisible } from './format';
+import { creneauLisible, jourLisible } from './format';
 import type { Creneau, Demande, Garage } from './types';
 
 const RESEND = process.env.RESEND_API_KEY;
@@ -190,6 +190,7 @@ export async function relancerGarage(
 
 export async function notifierConfirmation(
   garage: Garage, demande: Demande, creneau: Creneau,
+  restitution?: string | null,
 ): Promise<void> {
   if (!demande.client_email) return;
   await envoyerEmail({
@@ -198,16 +199,21 @@ export async function notifierConfirmation(
     texte: [
       `Bonjour ${demande.client_nom},`,
       '',
-      `${garage.nom} confirme votre rendez-vous :`,
+      `${garage.nom} vous attend pour déposer votre véhicule :`,
       `  ${creneauLisible(creneau)}`,
       `  Véhicule ${demande.vehicule_immat}`,
       garage.adresse ? `  ${garage.adresse}` : '',
+      // Ce que le client veut vraiment savoir : quand il la récupère.
+      ...(restitution ? ['', `Restitution prévue : ${jourLisible(restitution)}`,
+        'Cette date est une estimation ; vous serez prévenu dès que le véhicule'
+        + ' sera prêt.'] : []),
       '',
       `Suivi : ${lienSuivi(demande.token_suivi)}`,
       `Référence ${demande.reference}`,
     ].filter(Boolean).join('\n'),
   });
 }
+
 
 export async function notifierAlternative(
   garage: Garage, demande: Demande, creneau: Creneau, message: string | null,

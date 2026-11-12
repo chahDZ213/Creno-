@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { instant } from '@/lib/disponibilites';
+import { instant, restitutionEstimee } from '@/lib/disponibilites';
+import { DUREE_CRENEAU_DEPOSE } from '@/lib/types';
 import {
   notifierAlternative, notifierConfirmation, notifierRefus, notifierVoiturePrete,
 } from '@/lib/notifications';
@@ -32,21 +33,34 @@ export async function confirmer(formData: FormData) {
   const minutes = Number(formData.get('duree_minutes')) || 60;
   const { garage, db, demande } = await chargerDemande(id);
 
+  /* Le rendez-vous est une DÉPOSE : la remise des clés, pas la durée du
+     travail. Le travail, lui, est enregistré à part — c'est lui qui pèse sur
+     la charge de la journée, et c'est ce qui permet d'accepter un chantier
+     de trois jours sans qu'il ait à tenir dans une plage d'ouverture. */
+  const fenetre = Math.max(5, garage.duree_depot_minutes ?? DUREE_CRENEAU_DEPOSE);
   const creneau: Creneau = {
     debut: new Date(debut).toISOString(),
-    fin: new Date(+new Date(debut) + minutes * 60_000).toISOString(),
+    fin: new Date(+new Date(debut) + fenetre * 60_000).toISOString(),
   };
+
+  // Le garage a pu corriger la date proposée ; sinon on garde l'estimation.
+  const saisie = String(formData.get('restitution_prevue') ?? '').trim();
+  const restitution = /^\d{4}-\d{2}-\d{2}$/.test(saisie)
+    ? saisie
+    : restitutionEstimee(garage, new Date(creneau.debut), minutes);
 
   await db.from('rendez_vous').insert({
     garage_id: garage.id, demande_id: demande.id,
     debut: creneau.debut, fin: creneau.fin, type: 'rdv',
+    charge_minutes: minutes,
     libelle: `${demande.vehicule_immat} — ${demande.client_nom}`,
   });
   await db.from('demandes').update({
     statut: 'confirmee', repondu_at: new Date().toISOString(),
+    restitution_prevue: restitution,
   }).eq('id', demande.id);
 
-  await notifierConfirmation(garage, demande, creneau);
+  await notifierConfirmation(garage, demande, creneau, restitution);
   revalidatePath('/app');
   redirect('/app');
 }

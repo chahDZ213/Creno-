@@ -77,6 +77,44 @@ export default async function Reglages() {
               className="champ" defaultValue={garage.horizon_jours} inputMode="numeric" />
           </div>
         </div>
+        <div className="mt-6 border-t border-ardoise-100 pt-5">
+          <h3 className="font-bold text-ardoise-950">Ce que vous acceptez par jour</h3>
+          <p className="mt-1 text-[0.9375rem] text-ardoise-600">
+            Un rendez-vous est une dépose de véhicule, pas une réservation de
+            l’atelier : un chantier de trois jours se prend comme une vidange.
+            Ce sont ces deux plafonds qui vous protègent — trois jeux de
+            plaquettes passent, trois embrayages non.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div>
+              <label className="etiquette" htmlFor="max_depots">Véhicules par jour</label>
+              <input id="max_depots" name="max_depots_jour" type="number" min={1}
+                className="champ" inputMode="numeric" placeholder="sans limite"
+                defaultValue={garage.max_depots_jour ?? ''} />
+            </div>
+            <div>
+              <label className="etiquette" htmlFor="charge_max">Heures de travail par jour</label>
+              <input id="charge_max" name="charge_max_heures_jour" type="number"
+                min={1} step="0.5" className="champ" inputMode="decimal"
+                placeholder={`${(garage.nb_postes * 8).toFixed(0)} par défaut`}
+                defaultValue={garage.charge_max_minutes_jour
+                  ? (garage.charge_max_minutes_jour / 60).toString() : ''} />
+            </div>
+            <div>
+              <label className="etiquette" htmlFor="duree_depot">Durée d’une dépose (min)</label>
+              <input id="duree_depot" name="duree_depot_minutes" type="number"
+                min={5} max={120} step={5} className="champ" inputMode="numeric"
+                defaultValue={garage.duree_depot_minutes ?? 30} />
+            </div>
+          </div>
+          <p className="mt-2 text-[0.9375rem] text-ardoise-600">
+            Laissez vide pour ne pas limiter. Le plafond d’heures empêche
+            l’accumulation, il n’interdit pas les gros chantiers : tant que la
+            journée n’a pas atteint son plafond, elle accepte une voiture de
+            plus, fût-elle là pour trois jours.
+          </p>
+        </div>
+
         <button className="bouton-principal mt-5 w-full">Enregistrer les horaires</button>
       </form>
 
