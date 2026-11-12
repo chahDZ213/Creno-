@@ -166,3 +166,40 @@ export async function deplacerPrestation(formData: FormData) {
   await db.from('prestations').update({ ordre: liste[i].ordre }).eq('id', liste[j].id);
   revalidatePath('/app/reglages');
 }
+
+/**
+ * Catégories de véhicule et leurs coefficients.
+ *
+ * Le libellé vide supprime la ligne : c'est le geste attendu sur un téléphone,
+ * et ça évite un bouton « supprimer » par ligne dans une page déjà chargée.
+ */
+export async function enregistrerCategories(formData: FormData) {
+  const { garage } = await monGarage();
+  const db = await serveur();
+
+  const categories: Array<{ cle: string; libelle: string; coefficient: number }> = [];
+  const vus = new Set<string>();
+  for (let i = 0; i < 12; i++) {
+    const libelle = texte(formData.get(`cat_${i}_libelle`));
+    if (!libelle) continue;
+    const brut = String(formData.get(`cat_${i}_coefficient`) ?? '').replace(',', '.');
+    const coefficient = Number(brut);
+    if (!Number.isFinite(coefficient) || coefficient <= 0) continue;
+
+    /* La clé est l'identité de la catégorie : elle est déjà enregistrée dans
+       les demandes passées. On garde celle du champ caché, et on n'en
+       fabrique une qu'à l'ajout d'une ligne — sinon renommer « Premium » en
+       « Allemandes » ferait perdre son prix à toutes les demandes en cours. */
+    let cle = texte(formData.get(`cat_${i}_cle`))
+      ?? libelle.normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    if (!cle || vus.has(cle)) cle = `cat-${i}`;
+    vus.add(cle);
+    categories.push({ cle, libelle, coefficient: Math.round(coefficient * 100) / 100 });
+  }
+
+  await db.from('garages')
+    .update({ categories_vehicule: categories }).eq('id', garage.id);
+  revalidatePath('/app/reglages');
+  revalidatePath(`/${garage.slug}`);
+}

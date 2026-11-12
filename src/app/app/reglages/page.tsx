@@ -1,8 +1,10 @@
 import {
   ajouterFermeture, ajouterPrestation, basculerPrestation, deplacerPrestation,
-  enregistrerHoraires, enregistrerVitrine, modifierPrestation, retirerFermeture,
+  enregistrerCategories, enregistrerHoraires, enregistrerVitrine,
+  modifierPrestation, retirerFermeture,
   supprimerPrestation,
 } from './actions';
+import { categoriesDe } from '@/lib/categories';
 import { monGarage } from '@/lib/serveur/session';
 import { serveur } from '@/lib/supabase/server';
 import { JOURS, type Prestation } from '@/lib/types';
@@ -116,6 +118,36 @@ export default async function Reglages() {
         </div>
 
         <button className="bouton-principal mt-5 w-full">Enregistrer les horaires</button>
+      </form>
+
+      {/* -------------------------------------- catégories de véhicule */}
+      <form action={enregistrerCategories} className="bloc p-4">
+        <h2 className="text-xl font-bold text-ardoise-950">Catégories de véhicule</h2>
+        <p className="mt-1 text-[0.9375rem] text-ardoise-600">
+          Le client choisit la sienne avant de voir vos tarifs. Le coefficient
+          multiplie le prix <em>et</em> la durée de chaque prestation : un
+          embrayage d’A6 n’est ni le prix ni le temps d’un embrayage de Clio.
+          Videz un libellé pour retirer la ligne.
+        </p>
+        <div className="mt-4 space-y-2">
+          {[...categoriesDe(garage), { cle: '', libelle: '', coefficient: 1 }]
+            .map((c, i) => (
+              <div key={c.cle || `nouveau-${i}`} className="flex items-center gap-2">
+                <input type="hidden" name={`cat_${i}_cle`} value={c.cle} />
+                <input name={`cat_${i}_libelle`} defaultValue={c.libelle}
+                  aria-label={`Libellé de la catégorie ${i + 1}`}
+                  placeholder="Ajouter une catégorie…"
+                  className="champ flex-1" />
+                <span className="text-ardoise-400">×</span>
+                <input name={`cat_${i}_coefficient`} defaultValue={c.coefficient}
+                  aria-label={`Coefficient de la catégorie ${i + 1}`}
+                  inputMode="decimal" className="champ w-20 text-right" />
+              </div>
+            ))}
+        </div>
+        <button className="bouton-principal mt-4 w-full">
+          Enregistrer les catégories
+        </button>
       </form>
 
       {/* ----------------------------------------------------- fermetures */}

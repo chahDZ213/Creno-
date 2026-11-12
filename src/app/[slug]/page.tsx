@@ -64,6 +64,7 @@ export default async function PagePublique(
             logo_url: garage.logo_url, couleur_primaire: garage.couleur_primaire,
             affiche_prix: garage.affiche_prix,
             delai_min_heures: garage.delai_min_heures,
+            categories_vehicule: garage.categories_vehicule,
           }}
           prestations={prestations}
           gabarit={garage.gabarit}
