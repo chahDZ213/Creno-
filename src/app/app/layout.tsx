@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import BarreOnglets from '@/components/BarreOnglets';
 import Deconnexion from '@/components/Deconnexion';
 import { variables } from '@/lib/couleur';
@@ -9,6 +10,17 @@ export const dynamic = 'force-dynamic';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { garage } = await monGarage();
+
+  /* Un garage sans horaires n'a jamais répondu aux questions d'installation.
+     On l'y renvoie plutôt que de lui ouvrir un tableau de bord vide dont rien
+     n'explique quoi faire — et dont la page publique ne proposerait de toute
+     façon aucun créneau.
+
+     Les horaires servent de marqueur plutôt qu'une colonne dédiée : un garage
+     qui ferme tous ses jours écrit `{"lundi":null,…}`, ce qui n'est pas `{}`.
+     Les deux situations restent donc distinctes. */
+  if (Object.keys(garage.horaires ?? {}).length === 0) redirect('/installation');
+
   const db = await serveur();
 
   // Le compte des demandes en attente vit dans la barre du bas : c'est la
