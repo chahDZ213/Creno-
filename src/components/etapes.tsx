@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { immatValide, normaliserImmat } from '@/lib/immat';
+import { categoriesDe, coefficientDe, dureeAjustee, prixAjuste } from '@/lib/categories';
 import { duree as formatDuree, heure, jourLong, prix as formatPrix } from '@/lib/format';
 import { DUREE_DEPOT_MINUTES, LIBELLE_DEPOT, type Creneau, type Prestation } from '@/lib/types';
 
@@ -9,10 +10,13 @@ export type GaragePublic = {
   id: string; slug: string; nom: string; adresse: string | null;
   telephone: string | null; logo_url: string | null; couleur_primaire: string;
   affiche_prix: boolean; delai_min_heures: number;
+  categories_vehicule?: Array<{ cle: string; libelle: string; coefficient: number }> | null;
 };
 
 export type Brouillon = {
   prestationIds: string[];
+  /** Catégorie du véhicule : elle ajuste les prix et les durées affichés. */
+  categorie: string;
   description: string;
   immat: string; marque: string; modele: string; annee: string; km: string;
   creneaux: Creneau[];
@@ -20,16 +24,20 @@ export type Brouillon = {
 };
 
 export const brouillonVide = (): Brouillon => ({
-  prestationIds: [], description: '',
+  prestationIds: [], categorie: '', description: '',
   immat: '', marque: '', modele: '', annee: '', km: '',
   creneaux: [], nom: '', tel: '', email: '', prefereTelephone: false,
 });
 
-export const dureeTotale = (p: Prestation[], ids: string[]) => {
+export const dureeTotale = (p: Prestation[], ids: string[], coefficient = 1) => {
   const t = p.filter((x) => ids.includes(x.id))
-    .reduce((s, x) => s + x.duree_minutes, 0);
+    .reduce((s, x) => s + dureeAjustee(x.duree_minutes, coefficient), 0);
   return t > 0 ? t : DUREE_DEPOT_MINUTES;
 };
+
+/** Total « à partir de » pour les prestations cochées, catégorie appliquée. */
+export const totalDepart = (choisies: Prestation[], coefficient: number) =>
+  choisies.reduce((s, p) => s + (prixAjuste(p.prix_ttc, coefficient) ?? 0), 0);
 
 /* ----------------------------------------------------------- 1. Le besoin */
 
@@ -44,9 +52,10 @@ export function ChoixBesoin({
       ? brouillon.prestationIds.filter((x) => x !== id)
       : [...brouillon.prestationIds, id],
   });
+  const categories = categoriesDe(garage);
+  const coefficient = coefficientDe(garage, brouillon.categorie);
   const choisies = prestations.filter((p) => brouillon.prestationIds.includes(p.id));
-  const total = choisies.reduce(
-    (s, p) => (p.prix_ttc == null ? s : s + Number(p.prix_ttc)), 0);
+  const total = totalDepart(choisies, coefficient);
   const surDevis = choisies.some((p) => p.prix_ttc == null);
 
   return (
@@ -57,6 +66,31 @@ export function ChoixBesoin({
       <p className="mt-1 text-ardoise-600">
         Cochez ce que vous savez, décrivez le reste. Les deux sont possibles.
       </p>
+
+      {/* La catégorie vient avant les prestations : c'est elle qui fixe les
+          prix et les durées affichés juste en dessous. */}
+      <fieldset className="mt-5">
+        <legend className="font-semibold text-ardoise-950">
+          Quel genre de véhicule ?
+        </legend>
+        <p className="mt-1 text-[0.9375rem] text-ardoise-600">
+          Une berline allemande ne demande ni le même temps ni le même tarif
+          qu’une citadine.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {categories.map((c) => (
+            <button key={c.cle} type="button"
+              onClick={() => modifier({ categorie: c.cle })}
+              aria-pressed={brouillon.categorie === c.cle}
+              className={`min-h-tactile rounded-full border-2 px-4 font-semibold ${
+                brouillon.categorie === c.cle
+                  ? 'border-atelier bg-atelier/10 text-ardoise-950'
+                  : 'border-ardoise-200 bg-white text-ardoise-800'}`}>
+              {c.libelle}
+            </button>
+          ))}
+        </div>
+      </fieldset>
 
       <ul className="mt-5 divide-y divide-ardoise-200 border-y border-ardoise-200">
         {prestations.map((p) => {
@@ -69,10 +103,19 @@ export function ChoixBesoin({
                   className="h-6 w-6 shrink-0 accent-atelier"
                 />
                 <span className="flex-1 font-semibold text-ardoise-950">{p.libelle}</span>
-                <span className="text-sm text-ardoise-600">{formatDuree(p.duree_minutes)}</span>
+                <span className="text-sm text-ardoise-600">
+                  {formatDuree(dureeAjustee(p.duree_minutes, coefficient))}
+                </span>
                 {garage.affiche_prix && (
-                  <span className="w-24 text-right font-semibold text-ardoise-800">
-                    {formatPrix(p.prix_ttc)}
+                  <span className="w-28 text-right font-semibold text-ardoise-800">
+                    {p.prix_ttc == null ? 'Sur devis' : (
+                      <>
+                        <span className="block text-[0.6875rem] font-normal uppercase tracking-wide text-ardoise-400">
+                          à partir de
+                        </span>
+                        {formatPrix(prixAjuste(p.prix_ttc, coefficient))}
+                      </>
+                    )}
                   </span>
                 )}
               </label>
@@ -84,12 +127,17 @@ export function ChoixBesoin({
       {garage.affiche_prix && choisies.length > 0 && (
         <p className="mt-3 text-right text-ardoise-800">
           <span className="font-bold">
-            Total {surDevis && total === 0 ? 'sur devis' : formatPrix(total)}
+            {surDevis && total === 0
+              ? 'Total sur devis'
+              : `À partir de ${formatPrix(total)}`}
             {surDevis && total > 0 ? ' + devis' : ''}
           </span>
           <br />
           <span className="text-sm text-ardoise-600">
-            Estimation, à confirmer par le garage.
+            {/* « À partir de » et pas un prix ferme : le garage n'a pas
+                encore vu la voiture, et un montant annoncé l'engagerait. */}
+            Prix de départ pour ce type de véhicule, confirmé par le garage
+            après examen.
           </span>
         </p>
       )}
@@ -189,18 +237,24 @@ export function ChoixCreneaux({
   const [chargement, setChargement] = useState(true);
   const [ouvert, setOuvert] = useState<string | null>(null);
   const cle = brouillon.prestationIds.join(',');
+  // La catégorie change la durée du travail, donc la charge de la journée,
+  // donc les jours que le garage peut encore accepter.
+  const categorie = brouillon.categorie;
 
   useEffect(() => {
     let vivant = true;
     setChargement(true);
+    const parametres = new URLSearchParams();
+    if (cle) parametres.set('prestations', cle);
+    if (categorie) parametres.set('categorie', categorie);
     const url = `/api/garages/${garage.slug}/disponibilites`
-      + (cle ? `?prestations=${encodeURIComponent(cle)}` : '');
+      + (parametres.size ? `?${parametres}` : '');
     fetch(url)
       .then((r) => r.json())
       .then((d) => { if (vivant) { setJours(d.jours ?? []); setOuvert(d.jours?.[0]?.jour ?? null); } })
       .finally(() => { if (vivant) setChargement(false); });
     return () => { vivant = false; };
-  }, [garage.slug, cle]);
+  }, [garage.slug, cle, categorie]);
 
   const choisi = (c: Creneau) => brouillon.creneaux.some((x) => x.debut === c.debut);
   const bascule = (c: Creneau) => {
@@ -342,6 +396,9 @@ export function manquesDe(b: Brouillon): Record<number, string> {
   const m: Record<number, string> = {};
   if (b.prestationIds.length === 0 && !b.description.trim()) {
     m[1] = 'Cochez une prestation ou décrivez la panne.';
+  } else if (!b.categorie) {
+    // Exigée : elle décide du prix annoncé ET de la durée réservée.
+    m[1] = 'Indiquez le genre de véhicule.';
   }
   if (!b.immat.trim()) m[2] = 'L’immatriculation est obligatoire.';
   else if (!immatValide(b.immat)) m[2] = 'Immatriculation non reconnue.';
@@ -361,9 +418,9 @@ export function Recapitulatif({
     () => prestations.filter((p) => brouillon.prestationIds.includes(p.id)),
     [prestations, brouillon.prestationIds],
   );
-  const minutes = dureeTotale(prestations, brouillon.prestationIds);
-  const total = choisies.reduce(
-    (s, p) => (p.prix_ttc == null ? s : s + Number(p.prix_ttc)), 0);
+  const coefficient = coefficientDe(garage, brouillon.categorie);
+  const minutes = dureeTotale(prestations, brouillon.prestationIds, coefficient);
+  const total = totalDepart(choisies, coefficient);
   const surDevis = choisies.some((p) => p.prix_ttc == null);
   const depot = choisies.length === 0;
 
@@ -380,12 +437,17 @@ export function Recapitulatif({
       {garage.affiche_prix && !depot && (
         <p className="mt-3 border-t border-ardoise-200 pt-3">
           <span className="font-bold">
-            Total {surDevis && total === 0 ? 'sur devis' : formatPrix(total)}
+            {surDevis && total === 0
+              ? 'Total sur devis'
+              : `À partir de ${formatPrix(total)}`}
             {surDevis && total > 0 ? ' + devis' : ''}
           </span>
           <br />
           <span className="text-sm text-ardoise-600">
-            Estimation, à confirmer par le garage.
+            {/* « À partir de » et pas un prix ferme : le garage n'a pas
+                encore vu la voiture, et un montant annoncé l'engagerait. */}
+            Prix de départ pour ce type de véhicule, confirmé par le garage
+            après examen.
           </span>
         </p>
       )}

@@ -50,6 +50,8 @@ export type Garage = {
   max_depots_jour?: number | null;
   /** Charge de travail acceptée par jour. Null = nb_postes × minutes ouvrées. */
   charge_max_minutes_jour?: number | null;
+  /** Catégories de véhicule et leur coefficient. Vide = celles de départ. */
+  categories_vehicule?: Array<{ cle: string; libelle: string; coefficient: number }> | null;
   created_at?: string;
 };
 
@@ -97,6 +99,8 @@ export type Demande = {
   vehicule_modele: string | null;
   vehicule_annee: number | null;
   vehicule_km: number | null;
+  /** Catégorie choisie par le client, qui ajuste prix et durée. */
+  categorie_vehicule?: string | null;
   prestation_ids: string[];
   description_libre: string | null;
   creneaux_souhaites: Creneau[];

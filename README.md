@@ -79,6 +79,41 @@ Elle part dans l'e-mail de confirmation et s'affiche sur la page de suivi,
 présentée comme une estimation. Le message « votre véhicule est prêt » reste
 le seul signal ferme.
 
+## Le prix, et la catégorie du véhicule
+
+Le client demandait son rendez-vous sans savoir ce qu'il paierait. Il le voit
+maintenant — mais un embrayage de Clio 3 et un d'Audi A6 ne sont ni le même
+temps ni le même prix.
+
+Plutôt qu'une grille prix × catégorie à remplir à la main — des dizaines de
+cases qu'aucun garage ne tiendra à jour — **un coefficient par catégorie
+multiplie le tarif de base et la durée**. Une voiture plus chère à réparer
+l'est parce qu'elle prend plus de temps : un seul coefficient dit les deux, et
+la durée ajustée alimente la charge de la journée.
+
+| Catégorie | Coefficient | Embrayage à 890 € / 5 h |
+|---|---|---|
+| Citadine | 1 | 890 € · 5 h |
+| Berline ou break | 1,25 | 1 113 € · 6 h 15 |
+| SUV ou 4x4 | 1,45 | 1 291 € · 7 h 15 |
+| Premium | 1,6 | 1 424 € · 8 h |
+| Utilitaire | 1,4 | 1 246 € · 7 h |
+
+**C'est le client qui choisit sa catégorie**, à la première étape, avant de voir
+les tarifs. Déduire de la marque semblait plus fluide, mais une Clio 1.2 et une
+Clio RS tombent dans la même case, et le garage se retrouve avec un prix
+annoncé qu'il n'a pas voulu.
+
+**« À partir de », jamais un prix ferme.** Le garage n'a pas encore vu la
+voiture ; un montant annoncé l'engagerait, et la découverte d'un volant moteur
+mort se paierait sur sa marge. « Sur devis » reste « sur devis » : une
+prestation sans prix n'a pas de coefficient.
+
+La clé d'une catégorie est son identité, et elle est enregistrée dans les
+demandes passées : renommer « Premium » en « Allemandes » conserve la clé, pour
+qu'aucune demande en cours ne perde son prix. Une catégorie supprimée laisse
+les demandes qui la portaient au coefficient 1 plutôt que sans prix.
+
 ## Le calcul des disponibilités
 
 `src/lib/disponibilites.ts` est une fonction pure : on lui passe le garage,

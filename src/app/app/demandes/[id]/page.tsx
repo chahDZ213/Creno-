@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import ActionsDemande from '@/components/ActionsDemande';
 import VoiturePrete from '@/components/VoiturePrete';
 import PastilleStatut from '@/components/Statut';
+import { categoriesDe, coefficientDe, dureeAjustee, prixAjuste } from '@/lib/categories';
 import { restitutionEstimee } from '@/lib/disponibilites';
 import { creneauLisible, depuis, duree as formatDuree } from '@/lib/format';
 import { monGarage } from '@/lib/serveur/session';
@@ -29,8 +30,15 @@ export default async function Fiche(
     .eq('garage_id', garage.id);
   const choisies = ((toutes as Prestation[]) ?? [])
     .filter((p) => demande.prestation_ids.includes(p.id));
-  const minutes = choisies.reduce((s, p) => s + p.duree_minutes, 0)
-    || DUREE_DEPOT_MINUTES;
+  /* Le client a choisi une catégorie : elle allonge le travail autant
+     qu'elle en augmente le prix. L'atelier doit voir la durée ajustée, pas le
+     tarif de base — c'est elle qui a servi à proposer les créneaux. */
+  const coefficient = coefficientDe(garage, demande.categorie_vehicule);
+  const categorie = categoriesDe(garage)
+    .find((c) => c.cle === demande.categorie_vehicule) ?? null;
+  const minutes = choisies.reduce(
+    (s, p) => s + dureeAjustee(p.duree_minutes, coefficient), 0,
+  ) || DUREE_DEPOT_MINUTES;
 
   const enAttente = demande.statut === 'nouvelle';
   // Rendez-vous accepté : il reste un geste, dire que la voiture est prête.
@@ -73,7 +81,14 @@ export default async function Fiche(
             {choisies.map((p) => (
               <li key={p.id} className="flex justify-between py-2 text-ardoise-800">
                 <span>{p.libelle}</span>
-                <span className="text-ardoise-600">{formatDuree(p.duree_minutes)}</span>
+                <span className="text-ardoise-600">
+                  {garage.affiche_prix && p.prix_ttc != null && (
+                    <span className="mr-3 font-semibold text-ardoise-800">
+                      dès {prixAjuste(p.prix_ttc, coefficient)} €
+                    </span>
+                  )}
+                  {formatDuree(dureeAjustee(p.duree_minutes, coefficient))}
+                </span>
               </li>
             ))}
           </ul>
@@ -85,9 +100,21 @@ export default async function Fiche(
             « {demande.description_libre} »
           </p>
         )}
-        <p className="mt-3 border-t border-ardoise-100 pt-3 font-bold text-ardoise-950">
-          Durée estimée {formatDuree(minutes)}
-        </p>
+        <div className="mt-3 border-t border-ardoise-100 pt-3">
+          <p className="font-bold text-ardoise-950">
+            Durée estimée {formatDuree(minutes)}
+          </p>
+          {categorie && (
+            <p className="mt-1 text-[0.9375rem] text-ardoise-600">
+              {/* Dire le coefficient, pas seulement la catégorie : sinon le
+                  garage voit une durée qui ne correspond à aucune ligne de son
+                  catalogue et croit à une erreur. */}
+              {categorie.libelle}
+              {categorie.coefficient !== 1
+                && ` — tarifs et durées × ${categorie.coefficient}`}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* ------------------------------------------------------ les créneaux */}

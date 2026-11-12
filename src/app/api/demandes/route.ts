@@ -1,3 +1,4 @@
+import { categoriesDe } from '@/lib/categories';
 import { NextResponse } from 'next/server';
 import { disponibilites } from '@/lib/disponibilites';
 import { immatValide, normaliserImmat } from '@/lib/immat';
@@ -63,6 +64,11 @@ export async function POST(requete: Request) {
     vehicule_immat: immat,
     vehicule_marque: texte(corps.marque), vehicule_modele: texte(corps.modele),
     vehicule_annee: nombre(corps.annee), vehicule_km: nombre(corps.km),
+    /* Validée contre les catégories du garage : une clé inventée par un
+       client ferait apparaître, côté atelier, une catégorie qui n'existe pas
+       et un coefficient de 1 silencieux. */
+    categorie_vehicule: categoriesDe(garage)
+      .some((c) => c.cle === texte(corps.categorie)) ? texte(corps.categorie) : null,
     prestation_ids: choisies.map((p) => p.id),
     description_libre: description || null,
     creneaux_souhaites: retenus,
