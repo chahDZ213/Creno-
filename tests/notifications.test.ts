@@ -60,7 +60,7 @@ describe('notifierVoiturePrete', () => {
   });
 
   it('ne plante pas quand le client n’a laissé qu’un e-mail', async () => {
-    const sortie = await capturer(garage, { ...demande, client_tel: null } as typeof demande);
+    const sortie = await capturer(garage, { ...demande, client_tel: null } as unknown as typeof demande);
     expect(sortie).toContain('[email → client@exemple.fr]');
     expect(sortie).not.toContain('[sms →');
   });

@@ -29,6 +29,56 @@ de la semaine avec ses blocages manuels, et les réglages.
 **`/suivi/[token]` — le client.** Un lien unique, pas de compte. L'état de la
 demande et, si le garage a proposé un autre créneau, deux boutons.
 
+## Le créneau est une dépose
+
+Un client ne réserve pas l'atelier pendant cinq heures : il **dépose** sa
+voiture et repart. Le créneau est donc un rendez-vous de remise des clés — 30
+minutes par défaut, réglable — et la durée du travail ne décide plus de l'heure.
+
+La version précédente faisait l'inverse, et ça s'est vu en production : chez un
+garage ouvert 9h-18h avec pause 12h-14h, la journée vaut deux blocs de 3 h et
+4 h. Un embrayage de 5 h ne tenait dans aucun des deux et ne proposait **aucun
+créneau**. Le client lisait « aucun créneau libre sur les prochaines semaines »
+devant un planning vide, et partait téléphoner — en emportant le chantier le
+plus rentable de la semaine.
+
+Le travail n'a pas disparu du calcul : il alimente deux plafonds par journée,
+que le garage règle lui-même.
+
+| Plafond | Colonne | Défaut | Protège |
+|---|---|---|---|
+| Véhicules acceptés | `max_depots_jour` | aucun | l'accueil |
+| Heures de travail acceptées | `charge_max_minutes_jour` | `nb_postes` × minutes ouvrées | l'atelier |
+
+Deux plafonds et pas un seul, parce que trois jeux de plaquettes et trois
+embrayages, c'est le même nombre de voitures et pas du tout la même journée.
+
+**La règle de charge s'écrit `charge déjà posée < plafond`, et non
+`charge + travail <= plafond`.** Le plafond empêche l'**accumulation** ; il
+n'interdit pas les gros chantiers. Avec la règle inverse, un
+embrayage-distribution-freins étalé sur trois jours n'aurait jamais trouvé de
+place — alors que c'est précisément le travail qu'un garage veut prendre. Tant
+qu'une journée n'a pas atteint son plafond, elle accepte une voiture de plus,
+fût-elle là pour trois jours.
+
+`rendez_vous.charge_minutes` porte le travail, figé à la confirmation : le
+catalogue peut changer de durée ensuite sans déformer le passé. Les lignes
+antérieures à ce modèle n'ont pas cette colonne — leur fenêtre *valait* la
+durée du travail, elle est donc relue comme telle plutôt que comptée pour zéro.
+
+### La date de restitution
+
+`restitutionEstimee()` avance jour ouvré par jour ouvré en épuisant le travail,
+en sautant les jours fermés et les congés. La capacité qui compte est celle
+d'**un** poste, pas de tous : une voiture est traitée par un mécanicien. Le
+premier jour ne compte que depuis l'heure de la dépose — une voiture déposée à
+17 h n'a pas la journée devant elle.
+
+Le garage la corrige avant de confirmer : lui sait que la pièce arrive jeudi.
+Elle part dans l'e-mail de confirmation et s'affiche sur la page de suivi,
+présentée comme une estimation. Le message « votre véhicule est prêt » reste
+le seul signal ferme.
+
 ## Le calcul des disponibilités
 
 `src/lib/disponibilites.ts` est une fonction pure : on lui passe le garage,

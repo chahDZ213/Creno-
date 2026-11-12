@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import ActionsDemande from '@/components/ActionsDemande';
 import VoiturePrete from '@/components/VoiturePrete';
 import PastilleStatut from '@/components/Statut';
+import { restitutionEstimee } from '@/lib/disponibilites';
 import { creneauLisible, depuis, duree as formatDuree } from '@/lib/format';
 import { monGarage } from '@/lib/serveur/session';
 import { serveur } from '@/lib/supabase/server';
@@ -128,7 +129,12 @@ export default async function Fiche(
 
       {enAttente ? (
         <ActionsDemande id={demande.id}
-          creneaux={demande.creneaux_souhaites} dureeEstimee={minutes} />
+          creneaux={demande.creneaux_souhaites} dureeEstimee={minutes}
+          restitutionProposee={restitutionEstimee(
+            garage,
+            new Date(demande.creneaux_souhaites[0]?.debut ?? Date.now()),
+            minutes,
+          )} />
       ) : enAtelier ? (
         <VoiturePrete id={demande.id} immat={demande.vehicule_immat} />
       ) : (

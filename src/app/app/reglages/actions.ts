@@ -33,11 +33,25 @@ export async function enregistrerHoraires(formData: FormData) {
     };
   }
 
+  /* Vide = pas de plafond. `nombre()` rendrait le defaut sur une chaine vide,
+     ce qui poserait une limite que le garage n'a pas demandee : on distingue
+     donc « rien saisi » de « zero ». */
+  const plafond = (v: FormDataEntryValue | null, facteur = 1) => {
+    const brut = String(v ?? '').trim().replace(',', '.');
+    if (!brut) return null;
+    const n = Number(brut) * facteur;
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+  };
+
   await db.from('garages').update({
     horaires,
     nb_postes: Math.max(1, nombre(formData.get('nb_postes'), 1)),
     delai_min_heures: nombre(formData.get('delai_min_heures'), 24),
     horizon_jours: Math.min(90, Math.max(1, nombre(formData.get('horizon_jours'), 21))),
+    max_depots_jour: plafond(formData.get('max_depots_jour')),
+    charge_max_minutes_jour: plafond(formData.get('charge_max_heures_jour'), 60),
+    duree_depot_minutes: Math.min(120, Math.max(5,
+      nombre(formData.get('duree_depot_minutes'), 30))),
   }).eq('id', garage.id);
   revalidatePath('/app/reglages');
 }

@@ -44,6 +44,12 @@ export type Garage = {
   horizon_jours: number;
   taux_horaire_ttc: number | null;
   affiche_prix: boolean;
+  /** Longueur du rendez-vous de remise des clés. Le travail dure plus longtemps. */
+  duree_depot_minutes?: number;
+  /** Véhicules acceptés par jour. Null = pas de limite. */
+  max_depots_jour?: number | null;
+  /** Charge de travail acceptée par jour. Null = nb_postes × minutes ouvrées. */
+  charge_max_minutes_jour?: number | null;
   created_at?: string;
 };
 
@@ -67,6 +73,13 @@ export type RendezVous = {
   fin: string;
   type: 'rdv' | 'blocage';
   libelle: string | null;
+  /**
+   * Travail que représente ce rendez-vous, en minutes — distinct de
+   * `fin - debut`, qui n'est que la fenêtre de dépose. Figé à la
+   * confirmation : le catalogue peut changer de durée ensuite sans
+   * déformer le passé.
+   */
+  charge_minutes?: number | null;
   /** Date d'envoi du rappel de la veille au client. Null tant qu'il n'est pas parti. */
   rappel_veille_at?: string | null;
 };
@@ -92,11 +105,15 @@ export type Demande = {
   alternative: Creneau | null;
   message_garage: string | null;
   token_suivi: string;
+  /** Date de restitution annoncée au client. Null tant que rien n'est annoncé. */
+  restitution_prevue?: string | null;
   created_at: string;
   repondu_at: string | null;
 };
 
-/** Un dépôt sans prestation cochée : 30 min, et on le dit au client. */
+/** Un dépôt sans prestation cochée : 30 min de travail, et on le dit au client. */
 export const DUREE_DEPOT_MINUTES = 30;
+/** Longueur par défaut du rendez-vous de remise des clés. */
+export const DUREE_CRENEAU_DEPOSE = 30;
 export const LIBELLE_DEPOT = 'Dépôt du véhicule pour diagnostic';
 export const PAS_MINUTES = 30;

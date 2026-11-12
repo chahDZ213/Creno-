@@ -37,3 +37,17 @@ export const depuis = (iso: string, maintenant = new Date()) => {
   const j = Math.floor(heures / 24);
   return j === 1 ? 'hier' : `il y a ${j} jours`;
 };
+
+/**
+ * « 2026-04-08 » → « mercredi 8 avril ».
+ *
+ * Midi UTC plutôt que minuit : à minuit, un décalage d'une heure suffit à
+ * faire basculer la date d'un jour, et la restitution annoncée au client
+ * tomberait la veille.
+ */
+export const jourLisible = (iso: string) => {
+  const [a, m, j] = iso.split('-').map(Number);
+  return new Intl.DateTimeFormat('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris',
+  }).format(new Date(Date.UTC(a, m - 1, j, 12)));
+};

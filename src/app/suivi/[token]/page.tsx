@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import ReponseAlternative from '@/components/ReponseAlternative';
 import { variables } from '@/lib/couleur';
-import { creneauLisible, depuis } from '@/lib/format';
+import { creneauLisible, depuis, jourLisible } from '@/lib/format';
 import { admin } from '@/lib/supabase/admin';
 import type { Creneau, Statut } from '@/lib/types';
 
@@ -13,6 +13,7 @@ type Suivi = {
   message_garage: string | null; creneaux_souhaites: Creneau[];
   alternative: Creneau | null; description_libre: string | null;
   vehicule_immat: string; created_at: string; repondu_at: string | null;
+  restitution_prevue: string | null;
   garage_nom: string; garage_telephone: string | null;
   garage_couleur: string; garage_slug: string;
 };
@@ -52,9 +53,27 @@ export default async function Suivi(
       </p>
 
       {rdv && (
-        <p className="mt-4 bloc p-4 text-lg font-semibold text-ardoise-950">
-          {creneauLisible(rdv)}
-        </p>
+        <div className="mt-4 bloc p-4">
+          <p className="text-sm font-semibold uppercase tracking-wide text-ardoise-600">
+            Dépôt du véhicule
+          </p>
+          <p className="text-lg font-semibold text-ardoise-950">
+            {creneauLisible(rdv)}
+          </p>
+          {d.restitution_prevue && (
+            <div className="mt-3 border-t border-ardoise-100 pt-3">
+              <p className="text-sm font-semibold uppercase tracking-wide text-ardoise-600">
+                Restitution prévue
+              </p>
+              <p className="text-lg font-semibold text-ardoise-950">
+                {jourLisible(d.restitution_prevue)}
+              </p>
+              <p className="mt-1 text-[0.9375rem] text-ardoise-600">
+                Estimation. Vous serez prévenu dès que le véhicule sera prêt.
+              </p>
+            </div>
+          )}
+        </div>
       )}
 
       {d.statut === 'alternative_proposee' && d.alternative && (
