@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import {
   Brouillon, ChampsContact, ChampsVehicule, ChoixBesoin, ChoixCreneaux,
@@ -72,6 +73,13 @@ export default function PriseRendezVous({
       </button>
       <p className="text-center text-sm text-ardoise-600">
         Vous ne réservez pas encore : le garage confirme le créneau retenu.
+      </p>
+      <p className="text-center text-xs text-ardoise-600">
+        Vos coordonnées et les informations du véhicule sont transmises à {garage.nom} pour
+        traiter votre demande et vous envoyer confirmation et rappel par SMS ou e-mail.{' '}
+        <Link href="/confidentialite" target="_blank" className="underline">Confidentialité</Link>
+        {' · '}
+        <Link href="/cgu" target="_blank" className="underline">Conditions</Link>
       </p>
     </div>
   );

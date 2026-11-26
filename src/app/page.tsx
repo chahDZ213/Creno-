@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import PiedLegal from '@/components/PiedLegal';
 import { serveur } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -51,6 +52,7 @@ export default async function Accueil() {
           </Link>
         )}
       </div>
+      <footer className="mt-16 text-center text-sm text-ardoise-600"><PiedLegal /></footer>
     </main>
   );
 }
