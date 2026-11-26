@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import PriseRendezVous from '@/components/PriseRendezVous';
+import PiedLegal from '@/components/PiedLegal';
 import { variables } from '@/lib/couleur';
 import { garageParSlug, prestationsActives } from '@/lib/serveur/donnees';
 
@@ -72,6 +73,7 @@ export default async function PagePublique(
 
       <footer className="mx-auto max-w-2xl px-5 py-10 text-center text-sm text-ardoise-600">
         Prise de rendez-vous propulsée par Créno.
+        <PiedLegal />
       </footer>
     </div>
   );

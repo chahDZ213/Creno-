@@ -41,7 +41,9 @@ export async function terminerInstallation(reponses: Installation) {
   /* Le slug est unique en base. Plutôt que de renvoyer le garagiste à son
      clavier avec « cette adresse est prise », on suffixe : mon-garage,
      mon-garage-2, mon-garage-3. */
-  let slug = voulu;
+  // Ces adresses sont prises par des pages du site : un garage ne peut pas les occuper.
+  const RESERVES = ['app', 'api', 'connexion', 'installation', 'suivi', 'confidentialite', 'cgu', 'mentions'];
+  let slug = RESERVES.includes(voulu) ? `${voulu}-garage` : voulu;
   for (let n = 2; n < 60; n++) {
     const { data } = await db.from('garages')
       .select('id').eq('slug', slug).maybeSingle();
