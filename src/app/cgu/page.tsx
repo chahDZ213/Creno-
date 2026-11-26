@@ -1,14 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import PageLegale from '@/components/PageLegale';
+import { CONTACT } from '@/lib/editeur';
 
 export const metadata: Metadata = { title: 'Conditions d’utilisation — Créno' };
 
 export default function Cgu() {
   return (
     <PageLegale titre="Conditions d’utilisation" maj="26 novembre 2026">
-      <p>[À FAIRE RELIRE PAR UN AVOCAT]</p>
-
       <h2>Le service</h2>
       <p>
         Créno permet aux clients d’un garage de lui adresser une demande de rendez-vous en
@@ -35,7 +34,7 @@ export default function Cgu() {
         L’abonnement garage est mensuel, sans engagement, à <strong>renouvellement
         automatique</strong> chaque mois jusqu’à résiliation. Il se résilie à tout moment en
         ligne ; l’accès reste ouvert jusqu’à la fin du mois payé. Les frais de mise en service
-        éventuels sont annoncés avant tout paiement. [À COMPLÉTER : prix en vigueur]
+        éventuels sont annoncés avant tout paiement. Prix en vigueur : 49 £ par mois, et 250 £ de mise en service.
       </p>
 
       <h2>Responsabilité</h2>
@@ -49,8 +48,9 @@ export default function Cgu() {
 
       <h2>Droit applicable</h2>
       <p>
-        Droit français. En cas de litige, un client consommateur peut recourir gratuitement à un
-        médiateur de la consommation : [À COMPLÉTER : nom et site du médiateur].
+        Ces conditions sont soumises au droit d’Angleterre et du pays de Galles. Un
+        consommateur garde toujours les protections que lui accorde la loi de son pays de
+        résidence. Pour toute réclamation : <a className="underline" href={`mailto:${CONTACT}`}>{CONTACT}</a>.
       </p>
     </PageLegale>
   );

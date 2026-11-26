@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import PageLegale from '@/components/PageLegale';
+import { CONTACT } from '@/lib/editeur';
 
 export const metadata: Metadata = { title: 'Politique de confidentialité — Créno' };
 
@@ -9,7 +10,7 @@ export default function Confidentialite() {
       <p>
         Créno est un outil de prise de rendez-vous pour les garages. Cette page explique quelles
         données passent par Créno, pourquoi, combien de temps elles sont gardées et quels sont
-        vos droits. [À FAIRE RELIRE PAR UN AVOCAT]
+        vos droits.
       </p>
 
       <h2>Qui est responsable de vos données ?</h2>
@@ -53,9 +54,9 @@ export default function Confidentialite() {
       <h2>Combien de temps</h2>
       <p>
         Les demandes et rendez-vous sont conservés pendant la durée nécessaire au garage pour
-        suivre ses clients, et au plus [À COMPLÉTER : 3 ans] après le dernier rendez-vous. Les
-        données d’un garage sont supprimées [À COMPLÉTER : 3 mois] après la fin de son
-        abonnement, sauf obligation légale de conservation (factures : 10 ans).
+        suivre ses clients, et au plus 3 ans après le dernier rendez-vous. Les
+        données d’un garage sont supprimées 3 mois après la fin de son
+        abonnement, sauf obligation légale de conservation (factures : 6 ans au Royaume-Uni).
       </p>
 
       <h2>Qui y a accès</h2>
@@ -73,8 +74,9 @@ export default function Confidentialite() {
       <p>
         Vous pouvez demander l’accès à vos données, leur rectification, leur effacement, leur
         portabilité, la limitation du traitement ou vous y opposer, en écrivant à
-        [À COMPLÉTER : adresse e-mail de contact]. Réponse sous un mois. Vous pouvez aussi
-        introduire une réclamation auprès de la CNIL (cnil.fr).
+        <a className="underline" href={`mailto:${CONTACT}`}>{CONTACT}</a>. Réponse sous un mois.
+        Vous pouvez aussi saisir l’autorité de protection des données de votre pays : la CNIL
+        (cnil.fr) en France, l’ICO (ico.org.uk) au Royaume-Uni.
       </p>
     </PageLegale>
   );
